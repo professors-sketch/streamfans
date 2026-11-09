@@ -1,0 +1,701 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Find something good to watch across gaming videos and live streams.">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>StreamFans</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800;900&family=Instrument+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+/* Layout concept: a late-night broadcast guide. Billboard on top, channels down the side, streetlight amber on blue-black, road-sign headlines, odometer-style episode numbers. */
+:root {
+  color-scheme: dark;
+  --night: #11141f; --panel: #1b2030; --panel-2: #272d42; --line: #363d55;
+  --fg: #f2eee4; --mute: #aeb3c4; --sodium: #ffb03a; --on-sodium: #1d1507;
+  --live: #ff5b52; --safe: #63d6ba; --on-safe: #08231c;
+  --hazard-a: #232840; --hazard-b: #2e3550;
+  --display: "Big Shoulders Display", "Arial Narrow", Impact, sans-serif;
+  --body: "Instrument Sans", "Helvetica Neue", Arial, sans-serif;
+  --mono: "IBM Plex Mono", "SFMono-Regular", Consolas, monospace;
+  --gutter-l: max(16px, env(safe-area-inset-left, 0px));
+  --gutter-r: max(16px, env(safe-area-inset-right, 0px));
+}
+* { box-sizing: border-box; }
+body { background: var(--night); color: var(--fg); font: 400 15px/1.45 var(--body); overflow-x: hidden; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--night); }
+a { color: inherit; text-decoration: none; }
+button, input { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--sodium); outline-offset: 2px; }
+h1, h2, h3, p { margin: 0; }
+h1, h2 { font-family: var(--display); text-wrap: balance; }
+
+.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 9; background: var(--night); border-bottom: 1px solid var(--line); }
+.top-in { display: flex; align-items: center; gap: 22px; min-height: 60px; padding-block: 10px; padding-left: var(--gutter-l); padding-right: var(--gutter-r); }
+.logo { font: 900 30px/1 var(--display); letter-spacing: .02em; text-transform: uppercase; }
+.logo b { color: var(--sodium); font-weight: 900; }
+.nav { display: flex; gap: 4px; flex: 1; min-width: 0; }
+.nav a { padding: 7px 12px; color: var(--mute); font-weight: 600; border-radius: 6px; }
+.nav a:hover { color: var(--fg); }
+.nav a.on { color: var(--fg); background: var(--panel-2); }
+.shield { margin-left: auto; display: inline-flex; align-items: center; gap: 8px; padding: 7px 12px; border-radius: 99px; border: 1px solid var(--line); background: var(--panel); font-size: 13px; font-weight: 700; white-space: nowrap; }
+.shield i { width: 9px; height: 9px; border-radius: 50%; background: var(--mute); }
+.shield[aria-pressed="true"] { border-color: var(--safe); color: var(--safe); }
+.shield[aria-pressed="true"] i { background: var(--safe); }
+.tabbar { display: none; }
+
+main { max-width: 1400px; margin-inline: auto; padding-block: 20px 40px; padding-left: var(--gutter-l); padding-right: var(--gutter-r); display: grid; gap: 30px; }
+main > * { min-width: 0; }
+
+.hero { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 32px; align-items: center; padding-block: 8px; }
+.kicker { font: 600 12px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--sodium); }
+.hero h1, .page-h { font-weight: 900; text-transform: uppercase; line-height: .94; }
+.hero h1 { font-size: clamp(48px, 7.2vw, 96px); margin-block: 10px 18px; }
+.page-h { font-size: clamp(38px, 5vw, 60px); }
+.page-sub { color: var(--mute); max-width: 62ch; margin-top: 6px; }
+.chip-label { font-size: 13px; color: var(--mute); margin-block: 12px 6px; }
+.chips { display: flex; flex-wrap: wrap; gap: 7px; }
+.chip { border: 1px solid var(--line); background: var(--panel); padding: 7px 13px; border-radius: 6px; font-weight: 600; font-size: 14px; }
+.chip:hover { border-color: var(--mute); }
+.chip[aria-pressed="true"] { background: var(--sodium); border-color: var(--sodium); color: var(--on-sodium); }
+
+.pick { position: relative; display: block; border-radius: 10px; overflow: hidden; background: var(--panel); }
+.pick .thumb { border-radius: 0; }
+.pick-body { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px 14px; align-items: center; padding: 14px; }
+.pick-body h3 { font-size: 18px; line-height: 1.2; }
+.why { font: 500 12px/1.3 var(--mono); color: var(--safe); margin-bottom: 5px; }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 7px; padding: 9px 16px; border-radius: 6px; border: 1px solid var(--line); background: var(--panel-2); font-weight: 700; white-space: nowrap; }
+.btn.go { background: var(--sodium); border-color: var(--sodium); color: var(--on-sodium); }
+.btn:hover { filter: brightness(1.1); }
+
+.notice { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; padding: 10px 14px; border: 1px solid var(--safe); border-radius: 8px; color: var(--safe); font-weight: 500; }
+.notice button { background: none; border: 0; padding: 0; color: var(--fg); font-weight: 700; text-decoration: underline; }
+
+.row-h { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+.row-h h2 { font-size: 28px; font-weight: 800; line-height: 1; text-transform: uppercase; letter-spacing: .01em; }
+.row-h small, .row-h a { color: var(--mute); font-size: 13px; }
+.row-h a:hover { color: var(--fg); }
+.scroller { display: grid; grid-auto-flow: column; grid-auto-columns: clamp(205px, 62vw, 270px); gap: 12px; overflow-x: auto; margin-left: calc(-1 * var(--gutter-l)); margin-right: calc(-1 * var(--gutter-r)); padding-left: var(--gutter-l); padding-right: var(--gutter-r); padding-bottom: 8px; scroll-padding-left: var(--gutter-l); scroll-snap-type: x proximity; scrollbar-width: thin; scrollbar-color: var(--line) transparent; }
+.scroller.posters { grid-auto-columns: clamp(135px, 38vw, 176px); }
+.scroller > * { scroll-snap-align: start; min-width: 0; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 235px), 1fr)); gap: 18px 14px; }
+.grid.posters { grid-template-columns: repeat(auto-fill, minmax(min(46%, 165px), 1fr)); }
+
+.thumb { position: relative; display: block; aspect-ratio: 16 / 9; max-width: 100%; border-radius: 8px; overflow: hidden; background: var(--panel-2); }
+.poster .thumb { aspect-ratio: 2 / 3; }
+.art { position: absolute; inset: 0; width: 100%; height: 100%; display: block; object-fit: cover; }
+.tag:empty { display: none; }
+.card:hover .art { filter: brightness(1.12); }
+.tag { position: absolute; font: 600 11px/1 var(--mono); padding: 4px 5px; border-radius: 3px; background: var(--night); color: var(--fg); }
+.tag.rb { right: 6px; bottom: 6px; }
+.tag.lt { left: 6px; top: 6px; }
+.tag.rt { right: 6px; top: 6px; }
+.tag.live { background: var(--live); color: var(--night); font-weight: 600; }
+.tag.dot::before { content: ""; display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--night); margin-right: 5px; animation: blink 1.6s infinite; }
+@keyframes blink { 50% { opacity: .25; } }
+.bar { position: absolute; left: 0; right: 0; bottom: 0; height: 4px; background: var(--line); }
+.bar i { display: block; height: 100%; background: var(--sodium); }
+.card-t { margin-top: 8px; font-weight: 600; line-height: 1.25; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.card-m { color: var(--mute); font-size: 13px; margin-top: 3px; }
+.hazard { position: absolute; inset: 0; display: grid; place-items: center; align-content: center; gap: 3px; text-align: center; background: repeating-linear-gradient(135deg, var(--hazard-a) 0 16px, var(--hazard-b) 16px 32px); color: var(--safe); }
+.hazard b { font: 600 clamp(22px, 3.2vw, 34px)/1 var(--mono); }
+.hazard span { font-size: 12px; font-weight: 600; color: var(--fg); }
+.poster-t { position: absolute; left: 0; right: 0; bottom: 0; padding: 40px 10px 10px; background: linear-gradient(to top, var(--night), transparent); }
+.poster-t b { display: block; font: 800 23px/1 var(--display); text-transform: uppercase; }
+.poster-t span { display: block; font: 500 11px/1.3 var(--mono); color: var(--fg); margin-top: 5px; }
+
+.filters { display: grid; gap: 4px; }
+.search { width: 100%; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; font-size: 16px; }
+.search::placeholder { color: var(--mute); }
+.count { color: var(--mute); font-size: 14px; }
+.empty { padding: 26px 16px; border: 1px dashed var(--line); border-radius: 8px; color: var(--mute); text-align: center; }
+.creators { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr)); gap: 8px; }
+.creator { display: flex; align-items: center; gap: 10px; padding: 10px; background: var(--panel); border-radius: 8px; min-width: 0; }
+.creator div { min-width: 0; }
+.avatar { flex: none; display: grid; place-items: center; width: 42px; height: 42px; border-radius: 50%; background: var(--sodium); color: var(--on-sodium); font: 800 22px/1 var(--display); }
+.stack { display: grid; gap: 22px; }
+.stack > * { min-width: 0; }
+
+.watch { display: grid; grid-template-columns: minmax(0, 1fr) minmax(280px, 370px); gap: 22px; align-items: start; }
+.back { color: var(--mute); font-weight: 600; font-size: 14px; }
+.back:hover { color: var(--fg); }
+.stage { position: relative; aspect-ratio: 16 / 9; max-width: 100%; border-radius: 10px; overflow: hidden; background: var(--panel-2); }
+.stage iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+.stage .art { filter: brightness(.55); }
+.stage .hazard b, .stage .hazard span { display: none; }
+.stage-msg { position: absolute; inset: 0; display: grid; place-items: center; align-content: center; gap: 8px; padding: 14px; text-align: center; }
+.stage-msg p { font-size: 13px; max-width: 42ch; font-weight: 500; }
+.stage-msg .btn { font-size: 16px; padding: 11px 24px; }
+.controls { display: flex; align-items: center; gap: 12px; margin-top: 10px; }
+.controls input { flex: 1; min-width: 0; accent-color: var(--sodium); }
+.clock { font: 500 13px/1 var(--mono); color: var(--mute); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.w-title { font: 800 clamp(28px, 3.4vw, 40px)/1.02 var(--display); text-transform: uppercase; margin-top: 14px; }
+.w-meta { color: var(--mute); margin-block: 6px 12px; }
+.w-meta a { color: var(--fg); font-weight: 600; text-decoration: underline; }
+.next { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 14px; margin-top: 12px; background: var(--panel); border-radius: 8px; }
+.side-h { font: 800 24px/1 var(--display); text-transform: uppercase; margin-bottom: 10px; }
+.eps { display: grid; gap: 2px; }
+.ep { display: grid; grid-template-columns: 58px minmax(0, 1fr) auto; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 6px; position: relative; overflow: hidden; }
+.ep:hover { background: var(--panel); }
+.ep.on { background: var(--panel-2); }
+.ep .no { font: 600 13px/1 var(--mono); color: var(--sodium); font-variant-numeric: tabular-nums; }
+.ep .t { font-weight: 600; line-height: 1.25; min-width: 0; }
+.ep .m { font: 500 12px/1 var(--mono); color: var(--mute); white-space: nowrap; }
+.ep.done .t { color: var(--mute); }
+.ep .bar { height: 3px; background: none; }
+.show-top { display: grid; grid-template-columns: minmax(130px, 200px) minmax(0, 1fr); gap: 20px; align-items: end; }
+.poster { display: block; }
+
+.rail, .hsearch { display: none; }
+.hsearch { flex: 1; max-width: 620px; margin-inline: auto; }
+.hsearch .search { padding: 8px 14px; font-size: 14px; }
+.rail-link { display: block; padding: 9px 12px; border-radius: 6px; font-weight: 600; color: var(--mute); }
+.rail-link:hover { color: var(--fg); }
+.rail-link.on { color: var(--fg); background: var(--panel-2); }
+.rail-h { font: 800 21px/1 var(--display); text-transform: uppercase; margin: 22px 12px 8px; }
+.rail-ch { display: grid; grid-template-columns: 30px minmax(0, 1fr) auto; align-items: center; gap: 9px; padding: 6px 12px; border-radius: 6px; }
+.rail-ch:hover { background: var(--panel); }
+.rail-ch .avatar { width: 30px; height: 30px; font-size: 16px; }
+.rc-t { min-width: 0; }
+.rc-t b, .rc-t small { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rc-t b { font-weight: 600; font-size: 14px; }
+.rc-t small { color: var(--mute); font-size: 12px; }
+.rc-v { font: 500 12px/1 var(--mono); color: var(--fg); font-variant-numeric: tabular-nums; }
+.rc-v::before { content: ""; display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--live); margin-right: 5px; }
+.rail-more { display: block; padding: 9px 12px; color: var(--mute); font-size: 13px; font-weight: 600; }
+.rail-more:hover { color: var(--fg); }
+.bill { position: relative; display: flex; align-items: flex-end; min-height: clamp(330px, 38vw, 470px); border-radius: 12px; overflow: hidden; background: var(--panel-2); }
+.bill::after { content: ""; position: absolute; inset: 0; background: linear-gradient(72deg, var(--night) 8%, transparent 74%); }
+.bill-in { position: relative; z-index: 1; max-width: 640px; padding: clamp(18px, 3vw, 38px); }
+.bill h1 { font-weight: 900; text-transform: uppercase; font-size: clamp(36px, 4.6vw, 70px); line-height: .96; margin-block: 10px; overflow-wrap: anywhere; }
+.bill p { margin-bottom: 16px; max-width: 48ch; }
+.dots { position: absolute; z-index: 1; right: 16px; bottom: 10px; display: flex; gap: 6px; }
+.dot { position: relative; width: 30px; height: 24px; padding: 0; border: 0; background: none; }
+.dot::before { content: ""; position: absolute; left: 0; right: 0; top: 10px; height: 4px; background: var(--fg); opacity: .45; }
+.dot[aria-pressed="true"]::before { background: var(--sodium); opacity: 1; }
+.qp { background: var(--panel); padding: clamp(16px, 2.4vw, 28px); border-radius: 12px; }
+.qp .pick { background: var(--panel-2); }
+@media (max-width: 1099px) { .pick-body { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 480px) { .sl { display: none; } }
+.qp-h { font-weight: 900; text-transform: uppercase; line-height: .94; font-size: clamp(40px, 4.6vw, 68px); margin-block: 10px 14px; }
+.about { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 24px; }
+.about h2 { font-size: 26px; font-weight: 800; text-transform: uppercase; margin-bottom: 6px; }
+.about p { color: var(--mute); max-width: 60ch; }
+@media (min-width: 1100px) {
+  .site { display: grid; grid-template-columns: 250px minmax(0, 1fr); }
+  .rail { display: block; position: sticky; top: calc(env(safe-area-inset-top, 0px) + 61px); height: calc(100vh - 61px - env(safe-area-inset-top, 0px)); overflow-y: auto; padding-block: 14px; padding-inline: max(12px, env(safe-area-inset-left, 0px)) 12px; border-right: 1px solid var(--line); scrollbar-width: thin; scrollbar-color: var(--line) transparent; }
+  .nav, .page-search { display: none; }
+  .hsearch { display: block; }
+  .shield { margin-left: 0; }
+}
+footer { border-top: 1px solid var(--line); }
+.foot-in { max-width: 1400px; margin-inline: auto; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 20px; color: var(--mute); font-size: 13px; padding-block: 16px; padding-left: var(--gutter-l); padding-right: var(--gutter-r); }
+.foot-in button { background: none; border: 0; padding: 0; color: var(--fg); text-decoration: underline; font-size: 13px; }
+
+@media (max-width: 760px) {
+  .nav { display: none; }
+  .top-in { justify-content: space-between; }
+  .hero { grid-template-columns: minmax(0, 1fr); gap: 18px; }
+  .watch { grid-template-columns: minmax(0, 1fr); }
+  .show-top { grid-template-columns: 112px minmax(0, 1fr); gap: 14px; align-items: center; }
+  .bill::after { background: linear-gradient(to top, var(--night) 22%, transparent 88%); }
+  .dots { right: auto; left: 18px; bottom: 2px; }
+  .bill-in { padding-bottom: 34px; }
+  .pick-body { grid-template-columns: minmax(0, 1fr); }
+  .pick-body .btn { flex: 1; }
+  .filters .chips { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
+  .filters .chip { flex: none; }
+  footer { padding-bottom: calc(66px + env(safe-area-inset-bottom, 0px)); }
+  .tabbar { display: grid; grid-template-columns: repeat(5, 1fr); position: fixed; left: 0; right: 0; bottom: 0; z-index: 9; background: var(--panel); border-top: 1px solid var(--line); padding-top: 4px; padding-bottom: calc(4px + env(safe-area-inset-bottom, 0px)); padding-left: var(--gutter-l); padding-right: var(--gutter-r); }
+  .tabbar a { text-align: center; padding: 11px 2px; font-size: 13px; font-weight: 600; color: var(--mute); border-radius: 6px; }
+  .tabbar a.on { color: var(--sodium); }
+}
+@media (prefers-reduced-motion: reduce) { .tag.dot::before { animation: none; } .scroller { scroll-behavior: auto; } }
+</style>
+</head>
+<body>
+<header class="top"><div class="top-in" id="top"></div></header>
+<div class="site"><aside class="rail" id="rail" aria-label="Sections and live channels"></aside><div class="content"><main id="app"></main>
+<footer><div class="foot-in" id="foot"></div></footer></div></div>
+<nav class="tabbar" id="tabbar" aria-label="Main"></nav>
+
+<script>
+const CONFIG = { twitchParent: location.hostname };
+
+/* Catalog comes from catalog.json, rebuilt on a schedule by scripts/update.mjs. */
+const GAMES = {
+  gta6: { name: "GTA VI", motif: "coast", pal: [["#2b1f5c", "#ff8a5c", "#16122c", "#ffd36b"], ["#123a63", "#ff6f91", "#0d1b33", "#ffe08a"], ["#3b1745", "#ffa94d", "#1b0d27", "#fff0a8"]] },
+  gta5: { name: "GTA V", motif: "coast", pal: [["#14304f", "#e9a35b", "#0d1b2c", "#ffe2a0"]] },
+  elden: { name: "Elden Ring", motif: "peaks", pal: [["#1c2433", "#c9a050", "#10141e", "#ffe1a0"], ["#2c2038", "#a06a4c", "#150f1e", "#f2c879"]] },
+  mine: { name: "Minecraft", motif: "blocks", pal: [["#4aa3df", "#bfe6ff", "#6b4a2d", "#58a84a"], ["#27346e", "#7a79c9", "#3b2c26", "#3f8f53"]] },
+  fc: { name: "EA Sports FC", motif: "pitch", pal: [["#1f7a3f", "#2a9150", "#f5f5ef", "#ffcf4d"], ["#176a4e", "#238660", "#f5f5ef", "#ff6b5e"]] },
+  fort: { name: "Fortnite", motif: "island", pal: [["#2a7fd6", "#7fd0ff", "#3f9c58", "#d9c98a"], ["#5b38b5", "#49a3e0", "#3a8b6a", "#e3cf9a"]] },
+  bg3: { name: "Baldur's Gate 3", motif: "keep", pal: [["#1a2545", "#71517f", "#0e1324", "#efe4bd"], ["#26213f", "#a0525e", "#120f22", "#ffd9a8"]] },
+  other: { name: "Other games", motif: "peaks", pal: [["#1d2a44", "#6d7fa8", "#10141e", "#ffd9a8"], ["#2a2140", "#8c6a92", "#141022", "#ffe1a0"]] },
+};
+const LANGS = { en: "English", fr: "French", es: "Spanish", pt: "Portuguese" };
+const MOODS = { funny: "Funny", chill: "Chill", intense: "Intense", story: "Story" };
+let CREATORS = {}, VIDEOS = [], SERIES = [], LIVE = [], ITEMS = {}, SERIES_BY = {}, UPDATED = 0;
+const SAMPLE_PROGRESS = {};
+
+function hydrate(c) {
+  const now = Date.now(), age = p => Math.max(1, Math.round((now - Date.parse(p)) / 36e5));
+  UPDATED = Date.parse(c.updated) || now;
+  CREATORS = c.creators;
+  VIDEOS = c.videos.map(v => ({ ...v, id: v.youtubeId, kind: "video", age: age(v.published), gem: v.views < 150000 }));
+  LIVE = c.live.map(l => ({ ...l, kind: "live" }));
+  SERIES = c.series.map(s => {
+    const eps = s.eps.map(e => ({ ...e, id: e.youtubeId, kind: "ep", series: s.id, creator: s.creator, game: s.game, mood: s.mood, spoiler: s.spoiler }));
+    return { ...s, eps, age: Math.min(...eps.map(e => age(e.published))) };
+  });
+  ITEMS = {}; VIDEOS.concat(LIVE).forEach(v => ITEMS[v.id] = v);
+  SERIES.forEach(s => s.eps.forEach(e => ITEMS[e.id] = e));
+  SERIES_BY = Object.fromEntries(SERIES.map(s => [s.id, s]));
+}
+const heat = v => v.views / (v.age + 6);
+const hasDurations = () => VIDEOS.some(v => v.mins);
+function thumbUrl(it) {
+  if (it.kind === "live") return `https://static-cdn.jtvnw.net/previews-ttv/live_user_${encodeURIComponent(it.twitch)}-640x360.jpg?t=${UPDATED}`;
+  return `https://i.ytimg.com/vi/${encodeURIComponent(it.youtubeId)}/hqdefault.jpg`;
+}
+const seriesImg = s => S.shield && s.spoiler ? "" : thumbUrl(s.eps[0]);
+
+/* ---------- Saved on this device ---------- */
+const KEY = "streamfans.v1";
+function load() { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { return {}; } }
+const saved = load();
+const S = { shield: saved.shield !== false, progress: saved.progress || {} };
+function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
+
+const F = {
+  pick: { mood: "funny", time: 20, offset: 0 },
+  live: { game: "all", lang: "all", size: "all" },
+  series: { game: "all", mood: "all", lang: "all" },
+  browse: { game: "all", mood: "all", lang: "all", q: "" },
+};
+let route = "home", lastList = "home", clearing = false;
+const Player = { id: null, timer: null };
+
+/* ---------- Helpers ---------- */
+function hash(s) { let h = 2166136261; for (const c of String(s)) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; }
+function rng(s) { let a = hash(s); return () => { a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function mix(a, b, t) { const p = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16)); const A = p(a), B = p(b); return "rgb(" + A.map((v, i) => Math.round(v + (B[i] - v) * t)).join(",") + ")"; }
+function esc(s) { return String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])); }
+const mins = m => m == null ? "" : m >= 60 ? `${Math.floor(m / 60)}h ${String(m % 60).padStart(2, "0")}m` : `${m} min`;
+const ago = h => h < 24 ? `${h}h ago` : `${Math.round(h / 24)}d ago`;
+const num = n => n.toLocaleString("en-US");
+const clock = t => { t = Math.floor(t); const h = Math.floor(t / 3600), m = Math.floor(t / 60) % 60, s = t % 60; return (h ? h + ":" + String(m).padStart(2, "0") : m) + ":" + String(s).padStart(2, "0"); };
+const P = () => Object.keys(S.progress).length ? S.progress : SAMPLE_PROGRESS;
+const isSample = () => false;
+const pct = it => { const p = P()[it.id]; return p ? (p.done ? 1 : p.dur ? Math.min(1, p.t / p.dur) : .02) : 0; };
+const revealed = it => !S.shield || !it.spoiler || (it.kind === "ep" && !!P()[it.id]);
+const visible = it => !(S.shield && it.spoiler);
+const titleOf = it => revealed(it) ? it.title : it.kind === "ep" ? `Episode ${it.n}` : "Hidden story video";
+
+function setP(id, t, done, dur) {
+  const old = S.progress[id] || {}, d = dur || old.dur || 0;
+  S.progress[id] = { t, dur: d, done: !!done || (d > 0 && t >= d * .97), at: Date.now() };
+  save();
+}
+function nextEp(s) { return s.eps.find(e => !(P()[e.id] && P()[e.id].done)) || null; }
+function started(s) { return s.eps.some(e => P()[e.id]); }
+
+/* ---------- Generated thumbnail art ---------- */
+function art(key, game, src) {
+  if (src) return `<img class="art" src="${esc(src)}" alt="" loading="lazy">`;
+  const g = GAMES[game], r = rng(key), [a, b, ink, glow] = g.pal[Math.floor(r() * g.pal.length)];
+  let o = "";
+  const H = 112;
+  if (g.motif !== "pitch") for (let i = 0; i < 7; i++) o += `<rect x="0" y="${i * 16}" width="320" height="17" fill="${mix(a, b, i / 6)}"/>`;
+  const f = n => n.toFixed(1);
+  if (g.motif === "coast") {
+    const x = 70 + r() * 180;
+    o += `<circle cx="${f(x)}" cy="${H}" r="${f(30 + r() * 22)}" fill="${glow}"/>`;
+    for (let i = 0; i < 6; i++) o += `<rect x="0" y="${H + i * 12}" width="320" height="13" fill="${mix(b, ink, .35 + i * .12)}"/>`;
+    for (let i = 0; i < 6; i++) { const w = 70 - i * 9; o += `<rect x="${f(x - w / 2)}" y="${H + 5 + i * 10}" width="${w}" height="2.4" fill="${glow}" opacity=".65"/>`; }
+    const count = 1 + Math.floor(r() * 3);
+    for (let i = 0; i < count; i++) {
+      const px = 28 + i * 118 + r() * 34, base = 180, top = 78 + r() * 26, lean = 8 + r() * 12;
+      o += `<path d="M${f(px)} ${base} Q${f(px + lean * .3)} ${f((base + top) / 2)} ${f(px + lean)} ${f(top)}" stroke="${ink}" stroke-width="4" fill="none"/>`;
+      [[-30, 9], [-24, -9], [28, -9], [33, 9], [2, -16]].forEach(([dx, dy]) => o += `<path d="M${f(px + lean)} ${f(top)} Q${f(px + lean + dx * .6)} ${f(top + dy - 7)} ${f(px + lean + dx)} ${f(top + dy + 9)}" stroke="${ink}" stroke-width="3.2" fill="none"/>`);
+    }
+  } else if (g.motif === "peaks") {
+    o += `<circle cx="${f(50 + r() * 220)}" cy="${f(30 + r() * 30)}" r="15" fill="${glow}"/>`;
+    for (let l = 0; l < 3; l++) { let pts = `0,180 `, x = -20, up = true; while (x < 340) { pts += `${f(x)},${f(up ? 45 + l * 30 + r() * 26 : 112 + l * 18 + r() * 18)} `; x += 34 + r() * 40; up = !up; } pts += `340,180`; o += `<polygon points="${pts}" fill="${mix(b, ink, .45 + l * .27)}"/>`; }
+  } else if (g.motif === "blocks") {
+    for (let x = 0; x < 320; x += 20) { const h = 40 + Math.floor(r() * 5) * 20; o += `<rect x="${x}" y="${180 - h}" width="20.5" height="${h}" fill="${ink}"/><rect x="${x}" y="${180 - h}" width="20.5" height="12" fill="${glow}"/>`; if (r() > .72) o += `<rect x="${x}" y="${180 - h + 32}" width="20.5" height="20" fill="${mix(ink, "#000000", .3)}"/>`; }
+  } else if (g.motif === "pitch") {
+    for (let i = 0; i < 8; i++) o += `<rect x="${i * 40}" y="0" width="40.5" height="180" fill="${i % 2 ? a : b}"/>`;
+    o += `<g stroke="${ink}" stroke-width="2.5" fill="none"><rect x="14" y="14" width="292" height="152"/><line x1="160" y1="14" x2="160" y2="166"/><circle cx="160" cy="90" r="30"/><rect x="14" y="52" width="46" height="76"/><rect x="260" y="52" width="46" height="76"/></g>`;
+    for (let i = 0; i < 12; i++) o += `<circle cx="${f(26 + r() * 268)}" cy="${f(26 + r() * 128)}" r="5" fill="${i % 2 ? glow : "#23303f"}"/>`;
+  } else if (g.motif === "island") {
+    for (let i = 0; i < 4; i++) o += `<rect x="0" y="${H + i * 18}" width="320" height="19" fill="${mix(a, "#123a6b", .25 + i * .2)}"/>`;
+    const x = 110 + r() * 100;
+    o += `<ellipse cx="${f(x)}" cy="122" rx="112" ry="30" fill="${glow}"/><ellipse cx="${f(x)}" cy="112" rx="88" ry="30" fill="${ink}"/>`;
+    for (let i = 0; i < 3; i++) { const cx = 30 + r() * 260, cy = 24 + r() * 42; o += `<ellipse cx="${f(cx)}" cy="${f(cy)}" rx="30" ry="9" fill="#ffffff" opacity=".85"/><ellipse cx="${f(cx + 13)}" cy="${f(cy - 7)}" rx="17" ry="9" fill="#ffffff" opacity=".85"/>`; }
+  } else {
+    o += `<circle cx="${f(45 + r() * 230)}" cy="${f(28 + r() * 26)}" r="17" fill="${glow}"/><ellipse cx="160" cy="184" rx="240" ry="58" fill="${ink}"/>`;
+    const x0 = 70 + r() * 60;
+    [[0, 62, 26], [34, 44, 42], [84, 78, 24], [116, 38, 36]].forEach(([dx, h, w]) => { o += `<rect x="${f(x0 + dx)}" y="${150 - h}" width="${w}" height="${h + 20}" fill="${ink}"/>`; for (let c = 0; c < w; c += 10) o += `<rect x="${f(x0 + dx + c)}" y="${143 - h}" width="6" height="8" fill="${ink}"/>`; });
+  }
+  return `<svg class="art" viewBox="0 0 320 180" preserveAspectRatio="xMidYMid slice" aria-hidden="true">${o}</svg>`;
+}
+function hazard(it) { return `<span class="hazard"><b>${it.kind === "ep" ? "EP " + String(it.n).padStart(2, "0") : "HIDDEN"}</b><span>Spoiler Shield on</span></span>`; }
+function thumbInner(it) { return revealed(it) ? art(it.id, it.game, thumbUrl(it)) : hazard(it); }
+function barHtml(p) { return p > 0 ? `<span class="bar"><i style="width:${Math.round(p * 100)}%"></i></span>` : ""; }
+
+/* ---------- Cards ---------- */
+const link = (to, cls, inner, label) => `<a href="#${to}" data-go="${to}" class="${cls}"${label ? ` aria-label="${esc(label)}"` : ""}>${inner}</a>`;
+function metaLine(it, extra) { const c = CREATORS[it.creator]; return `${esc(c.name)} · ${esc(it.gameName || GAMES[it.game].name)}${extra ? " · " + extra : ""}`; }
+function videoCard(v) {
+  const inner = `<span class="thumb">${thumbInner(v)}<span class="tag lt">${CREATORS[v.creator].lang.toUpperCase()}</span><span class="tag rb">${mins(v.mins)}</span>${barHtml(pct(v))}</span>
+    <div class="card-t">${esc(titleOf(v))}</div><div class="card-m">${metaLine(v, v.age != null ? ago(v.age) : "")}</div>`;
+  return link("watch-" + v.id, "card", inner);
+}
+function liveCard(l) {
+  const inner = `<span class="thumb">${art(l.id, l.game, thumbUrl(l))}<span class="tag lt live dot">LIVE</span><span class="tag rt">${CREATORS[l.creator].lang.toUpperCase()}</span><span class="tag rb">${num(l.viewers)} watching</span></span>
+    <div class="card-t">${esc(l.title)}</div><div class="card-m">${metaLine(l, l.spoiler ? "Story run" : MOODS[l.mood])}</div>`;
+  return link("watch-" + l.id, "card", inner);
+}
+function seriesCard(s) {
+  const c = CREATORS[s.creator], done = s.eps.filter(e => P()[e.id] && P()[e.id].done).length;
+  const inner = `<span class="thumb">${art(s.id + "poster", s.game, seriesImg(s))}<span class="tag lt">${c.lang.toUpperCase()}</span>
+    <span class="poster-t"><b>${esc(s.title)}</b><span>${done ? `${done}/${s.eps.length} watched` : `${s.eps.length} episodes`}</span></span></span>
+    <div class="card-m">${esc(c.name)} · ${esc(GAMES[s.game].name)} · ${MOODS[s.mood]}</div>`;
+  return link("show-" + s.id, "card poster", inner);
+}
+function continueCard(it) {
+  const s = it.kind === "ep" ? SERIES_BY[it.series] : null;
+  const sub = s ? `${esc(s.title)} · Episode ${it.n}` : metaLine(it);
+  const inner = `<span class="thumb">${thumbInner(it)}<span class="tag rb">${mins(it.mins)}</span>${barHtml(Math.max(pct(it), .02))}</span><div class="card-t">${esc(titleOf(it))}</div><div class="card-m">${sub}</div>`;
+  return link("watch-" + it.id, "card", inner);
+}
+function row(title, cards, opts = {}) {
+  if (!cards.length) return "";
+  const right = opts.more ? link(opts.more, "", opts.moreText || "See all") : opts.note ? `<small>${esc(opts.note)}</small>` : "";
+  return `<section><div class="row-h"><h2>${esc(title)}</h2>${right}</div><div class="scroller${opts.posters ? " posters" : ""}">${cards.join("")}</div></section>`;
+}
+function chips(group, key, options, label) {
+  const cur = F[group][key];
+  const body = options.map(([v, t]) => `<button class="chip" data-set="${group}.${key}" data-val="${esc(v)}" data-fk="${group}.${key}.${esc(v)}" aria-pressed="${String(cur) === String(v)}">${esc(t)}</button>`).join("");
+  return `<div><div class="chip-label">${esc(label)}</div><div class="chips">${body}</div></div>`;
+}
+const gameOpts = [["all", "All games"]].concat(Object.entries(GAMES).map(([k, g]) => [k, g.name]));
+const langOpts = [["all", "All languages"]].concat(Object.entries(LANGS));
+const moodOpts = [["all", "Any style"]].concat(Object.entries(MOODS));
+
+/* ---------- Quick Pick ---------- */
+function pickCandidates() {
+  const { mood, time } = F.pick, t = +time;
+  const nextEps = SERIES.map(nextEp).filter(Boolean);
+  const pool = VIDEOS.filter(visible).concat(nextEps).filter(i => i.mood === mood);
+  if (!hasDurations()) return pool.sort((a, b) => (a.age || 9e9) - (b.age || 9e9));
+  const fits = pool.filter(i => i.mins <= t).sort((a, b) => (t - a.mins) - (t - b.mins));
+  const over = pool.filter(i => i.mins > t).sort((a, b) => a.mins - b.mins);
+  return fits.concat(over);
+}
+function currentPick() { const c = pickCandidates(); return c.length ? c[F.pick.offset % c.length] : null; }
+function pickWhy(it) {
+  const t = +F.pick.time;
+  if (!it.mins) return `${MOODS[it.mood]} · new from this creator`;
+  return it.mins <= t ? `${MOODS[it.mood]} · ${it.mins} min · fits your ${t}` : `Closest match · ${it.mins} min, a little over ${t}`;
+}
+function pickControls() {
+  return chips("pick", "mood", Object.entries(MOODS), "I'm in the mood for") + (!hasDurations() ? "" : chips("pick", "time", [[10, "10 min"], [20, "20 min"], [45, "45 min"], [90, "90 min"]], "I have"));
+}
+function pickResult() {
+  const it = currentPick();
+  if (!it) return `<div class="empty">Nothing fits that mood right now. Try another mood.</div>`;
+  const s = it.kind === "ep" ? SERIES_BY[it.series] : null;
+  const sub = s ? `${esc(s.title)} · Episode ${it.n} · ${esc(CREATORS[it.creator].name)}` : metaLine(it);
+  return `<div class="pick"><a href="#watch-${it.id}" data-go="watch-${it.id}" class="thumb card">${thumbInner(it)}<span class="tag rb">${mins(it.mins)}</span></a>
+    <div class="pick-body"><div><div class="why">${esc(pickWhy(it))}</div><h3>${esc(titleOf(it))}</h3><div class="card-m">${sub}</div></div>
+    <div class="actions"><a class="btn go" href="#watch-${it.id}" data-go="watch-${it.id}">Play</a><button class="btn" data-act="another" data-fk="another">Another</button></div></div></div>`;
+}
+
+/* ---------- Views ---------- */
+let featureIndex = 0;
+function billboard() {
+  const shows = SERIES.slice().sort((a, b) => (b.game === "gta6") - (a.game === "gta6") || a.age - b.age).slice(0, 4);
+  const tops = VIDEOS.filter(visible).sort((a, b) => (b.game === "gta6") - (a.game === "gta6") || heat(b) - heat(a)).slice(0, 4 - shows.length);
+  const list = shows.concat(tops);
+  if (!list.length) return "";
+  const x = list[featureIndex % list.length], c = CREATORS[x.creator], isShow = !!x.eps;
+  const dots = list.length < 2 ? "" : list.map((y, i) => `<button class="dot" data-act="feature" data-i="${i}" data-fk="feature-${i}" aria-label="Show ${esc(y.title)}" aria-pressed="${y === x}"></button>`).join("");
+  let play, more, kicker, line, img;
+  if (isShow) {
+    const n = nextEp(x), st = started(x);
+    play = n ? link("watch-" + n.id, "btn go", `${st ? "Continue" : "Start"} episode ${n.n}`) : link("watch-" + x.eps[0].id, "btn go", "Watch again");
+    more = link("show-" + x.id, "btn", "More info");
+    kicker = `Series · ${esc(GAMES[x.game].name)} · ${x.eps.length} episodes · ${LANGS[c.lang]}`;
+    line = `Follow ${esc(c.name)}'s playthrough, one episode at a time.`;
+    img = seriesImg(x);
+  } else {
+    play = link("watch-" + x.id, "btn go", "Play");
+    more = link("creator-" + c.id, "btn", "More from this creator");
+    kicker = `${esc(GAMES[x.game].name)} · ${LANGS[c.lang]} · ${num(x.views)} views`;
+    line = `From ${esc(c.name)}.`;
+    img = thumbUrl(x);
+  }
+  return `<section class="bill">${art(x.id + "bill", x.game, img)}<div class="bill-in"><div class="kicker">${kicker}</div><h1 class="bill-t">${esc(x.title)}</h1><p>${line}</p><div class="actions">${play}${more}</div></div><div class="dots">${dots}</div></section>`;
+}
+const views = {
+  home() {
+    const hiddenV = VIDEOS.filter(v => !visible(v)).length, hiddenL = LIVE.filter(l => !visible(l)).length;
+    const cont = continueItems();
+    const lives = LIVE.filter(visible).sort((a, b) => a.viewers - b.viewers);
+    const fresh = VIDEOS.filter(visible).sort((a, b) => a.age - b.age).slice(0, 20);
+    const binge = SERIES.slice().sort((a, b) => (b.game === "gta6") - (a.game === "gta6") || a.age - b.age);
+    const gems = VIDEOS.filter(v => visible(v) && v.gem).sort((a, b) => a.age - b.age).slice(0, 14);
+    const trend = VIDEOS.filter(v => visible(v) && v.game === "gta6").sort((a, b) => heat(b) - heat(a)).slice(0, 14);
+    return `${billboard()}<section class="hero qp"><div><div class="kicker">Quick Pick</div><h2 class="qp-h">What should I watch right now?</h2>${pickControls()}</div><div>${pickResult()}</div></section>
+      ${S.shield && (hiddenV + hiddenL) ? `<div class="notice"><span>Spoiler Shield is keeping ${hiddenV} story videos and ${hiddenL} story streams out of your feed.</span><button data-act="shield" data-fk="notice-shield">Show them</button></div>` : ""}
+      ${row("Continue Watching", cont.map(continueCard), { note: isSample() ? "Sample progress until you start watching" : "" })}
+      ${row("Live Now", lives.slice(0, 10).map(liveCard), { more: "live", moreText: "Smallest first · See all" })}
+      ${row("New From Creators", fresh.map(videoCard))}
+      ${row("Series To Binge", binge.map(seriesCard), { posters: true, more: "series" })}
+      ${row("Hidden Gems", gems.map(videoCard), { note: "Smaller recent videos" })}
+      ${row("Trending GTA VI", trend.map(videoCard))}`;
+  },
+  live() {
+    const f = F.live;
+    const fit = l => (f.game === "all" || l.game === f.game) && (f.lang === "all" || CREATORS[l.creator].lang === f.lang) &&
+      (f.size === "all" || (f.size === "s" && l.viewers < 100) || (f.size === "m" && l.viewers >= 100 && l.viewers <= 1000) || (f.size === "l" && l.viewers > 1000));
+    const all = LIVE.filter(fit), list = all.filter(visible).sort((a, b) => a.viewers - b.viewers), hid = all.length - list.length;
+    return `<div><h1 class="page-h">Live Now</h1><p class="page-sub">Smallest streams come first, so good creators get found.</p></div>
+      <div class="filters">${chips("live", "game", gameOpts, "Game")}${chips("live", "lang", langOpts, "Language")}${chips("live", "size", [["all", "Any size"], ["s", "Under 100"], ["m", "100 to 1,000"], ["l", "Over 1,000"]], "Viewers")}</div>
+      ${hid ? `<div class="notice"><span>${hid} story ${hid === 1 ? "stream is" : "streams are"} hidden by Spoiler Shield.</span><button data-act="shield" data-fk="notice-shield">Show them</button></div>` : ""}
+      ${list.length ? `<div class="grid">${list.map(liveCard).join("")}</div>` : `<div class="empty">No streams match those filters. Try a wider viewer range or another language.</div>`}`;
+  },
+  series() {
+    const f = F.series;
+    const list = SERIES.filter(s => (f.game === "all" || s.game === f.game) && (f.mood === "all" || s.mood === f.mood) && (f.lang === "all" || CREATORS[s.creator].lang === f.lang));
+    return `<div><h1 class="page-h">Watch a game like a show</h1><p class="page-sub">Pick a creator and follow their whole playthrough, one numbered episode at a time.</p></div>
+      <div class="filters">${chips("series", "game", gameOpts, "Game")}${chips("series", "mood", moodOpts, "Style")}${chips("series", "lang", langOpts, "Language")}</div>
+      ${list.length ? `<div class="grid posters">${list.map(seriesCard).join("")}</div>` : `<div class="empty">No series match those filters yet. Try another style or language.</div>`}`;
+  },
+  browse() {
+    return `<div><h1 class="page-h">Browse</h1></div>
+      <div class="filters"><div class="page-search"><label class="chip-label" for="q">Search creators, series and videos</label><input class="search" id="q" type="search" placeholder="Search creators, series and videos" value="${esc(F.browse.q)}" autocomplete="off"></div>
+      ${chips("browse", "game", gameOpts, "Game")}${chips("browse", "mood", moodOpts, "Style")}${chips("browse", "lang", langOpts, "Language")}</div>
+      <div id="results" class="stack">${browseResults()}</div>`;
+  },
+  about() {
+    return `<div><h1 class="page-h">About StreamFans</h1><p class="page-sub">StreamFans helps you find something good to watch across gaming videos and live streams.</p></div>
+      <section class="about"><div><h2>For viewers</h2><p>Pick a mood and the time you have, follow whole playthroughs as series, and find smaller creators. Spoiler Shield keeps story videos out of your feed, though no filter can catch everything.</p></div>
+      <div><h2>For creators</h2><p>Videos play through each creator's official YouTube or Twitch player, so the views stay on your channel.</p></div>
+      <div><h2>Independent</h2><p>StreamFans is not affiliated with Rockstar Games, Take-Two, YouTube, Twitch or any game publisher.</p></div></section>`;
+  },
+  pick() {
+    const others = pickCandidates().filter(i => i !== currentPick()).slice(0, 4);
+    return `<section class="hero"><div><div class="kicker">Quick Pick</div><h1 style="font-size:clamp(44px,6vw,76px)">One good video, right now</h1>${pickControls()}</div><div>${pickResult()}</div></section>
+      ${others.length ? `<section><div class="row-h"><h2>Also fits</h2></div><div class="grid">${others.map(i => i.kind === "ep" ? continueCard(i) : videoCard(i)).join("")}</div></section>` : ""}`;
+  },
+};
+function continueItems() {
+  const out = [], P0 = P();
+  SERIES.forEach(s => {
+    if (!started(s)) return;
+    const n = nextEp(s); if (!n) return;
+    const at = Math.max(...s.eps.map(e => (P0[e.id] && P0[e.id].at) || 0));
+    out.push({ it: n, at });
+  });
+  VIDEOS.forEach(v => { const p = P0[v.id]; if (p && !p.done && visible(v)) out.push({ it: v, at: p.at }); });
+  return out.sort((a, b) => b.at - a.at).map(o => o.it);
+}
+function browseResults() {
+  const f = F.browse, q = f.q.trim().toLowerCase();
+  const textFit = (...parts) => !q || parts.join(" ").toLowerCase().includes(q);
+  const cFit = c => f.lang === "all" || c.lang === f.lang;
+  const fitBase = i => (f.game === "all" || i.game === f.game) && (f.mood === "all" || i.mood === f.mood) && cFit(CREATORS[i.creator]);
+  const creators = q ? Object.values(CREATORS).filter(c => cFit(c) && (f.mood === "all" || c.mood === f.mood) && textFit(c.name, MOODS[c.mood], LANGS[c.lang])) : [];
+  const series = SERIES.filter(s => fitBase(s) && textFit(s.title, CREATORS[s.creator].name, GAMES[s.game].name, MOODS[s.mood]));
+  const vids = VIDEOS.filter(v => fitBase(v) && visible(v) && textFit(v.title, CREATORS[v.creator].name, GAMES[v.game].name, MOODS[v.mood]));
+  const hid = VIDEOS.filter(v => !visible(v) && fitBase(v)).length;
+  if (!creators.length && !series.length && !vids.length) return `<div class="empty">Nothing matches that search. Check the spelling or clear a filter.</div>`;
+  return `<div class="count">${series.length} series · ${vids.length} videos${creators.length ? ` · ${creators.length} ${creators.length === 1 ? "creator" : "creators"}` : ""}${hid && S.shield ? ` · ${hid} story videos hidden` : ""}</div>
+    ${creators.length ? `<section><div class="row-h"><h2>Creators</h2></div><div class="creators">${creators.map(creatorChip).join("")}</div></section>` : ""}
+    ${series.length ? `<section><div class="row-h"><h2>Series</h2></div><div class="scroller posters">${series.map(seriesCard).join("")}</div></section>` : ""}
+    ${vids.length ? `<section><div class="row-h"><h2>Videos</h2></div><div class="grid">${vids.map(videoCard).join("")}</div></section>` : ""}`;
+}
+function creatorChip(c) {
+  return link("creator-" + c.id, "creator", `<span class="avatar">${esc(c.name[0])}</span><div><div class="card-t" style="margin:0">${esc(c.name)}</div><div class="card-m">${LANGS[c.lang]} · ${MOODS[c.mood]}</div></div>`);
+}
+function showView(id) {
+  const s = SERIES_BY[id]; if (!s) return views.home();
+  const c = CREATORS[s.creator], n = nextEp(s), st = started(s);
+  return `${link(lastList, "back", "← Back")}
+    <section class="show-top"><div class="poster"><span class="thumb">${art(s.id + "poster", s.game, seriesImg(s))}</span></div>
+      <div><div class="kicker">${esc(GAMES[s.game].name)} · ${s.eps.length} episodes · ${LANGS[c.lang]}</div><h1 class="page-h" style="margin-block:8px">${esc(s.title)}</h1>
+      <p class="w-meta">With ${link("creator-" + c.id, "", esc(c.name))} · ${MOODS[s.mood]}</p>
+      <div class="actions">${n ? link("watch-" + n.id, "btn go", `${st ? "Continue" : "Start"} episode ${n.n}`) : link("watch-" + s.eps[0].id, "btn go", "Watch again")}</div></div></section>
+    ${S.shield && s.spoiler ? `<div class="notice"><span>Episode names stay hidden until you start each one.</span></div>` : ""}
+    <section>${epList(s)}</section>`;
+}
+function epList(s, cur) {
+  return `<div class="eps">${s.eps.map(e => {
+    const p = P()[e.id], d = p && p.done, v = pct(e);
+    return link("watch-" + e.id, `ep${e.id === cur ? " on" : ""}${d ? " done" : ""}`, `<span class="no">EP ${String(e.n).padStart(2, "0")}</span><span class="t">${esc(titleOf(e))}</span><span class="m">${d ? "Watched" : mins(e.mins)}</span>${!d ? barHtml(v) : ""}`);
+  }).join("")}</div>`;
+}
+function creatorView(id) {
+  const c = CREATORS[id]; if (!c) return views.home();
+  const series = SERIES.filter(s => s.creator === id), vids = VIDEOS.filter(v => v.creator === id && visible(v)), lv = LIVE.filter(l => l.creator === id && visible(l));
+  return `${link(lastList, "back", "← Back")}
+    <section class="creator" style="background:none;padding:0"><span class="avatar" style="width:68px;height:68px;font-size:36px">${esc(c.name[0])}</span><div><h1 class="page-h" style="font-size:clamp(34px,5vw,54px)">${esc(c.name)}</h1><div class="card-m">${LANGS[c.lang]} · ${MOODS[c.mood]}</div></div></section>
+    ${row("Live Now", lv.map(liveCard))}${row("Series", series.map(seriesCard), { posters: true })}${row("Videos", vids.map(videoCard))}`;
+}
+function watchView(id) {
+  const it = ITEMS[id]; if (!it) return views.home();
+  const c = CREATORS[it.creator], s = it.kind === "ep" ? SERIES_BY[it.series] : null;
+  const back = s ? link("show-" + s.id, "back", "← " + esc(s.title)) : link(lastList, "back", "← Back");
+  if (it.kind === "video" && !visible(it)) {
+    return `${back}<div class="empty"><p>Spoiler Shield is hiding this story video.</p><div class="actions" style="justify-content:center;margin-top:12px"><button class="btn go" data-act="shield" data-fk="gate-shield">Turn off Spoiler Shield</button></div></div>`;
+  }
+  const isLive = it.kind === "live", shown = revealed(it);
+  let stage;
+  if (isLive) stage = `<div class="stage"><iframe src="https://player.twitch.tv/?channel=${encodeURIComponent(it.twitch)}&parent=${encodeURIComponent(CONFIG.twitchParent)}" title="${esc(it.title)}" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe></div>`;
+  else if (shown) stage = `<div class="stage"><div id="yt"></div></div>`;
+  else stage = `<div class="stage">${hazard(it)}<div class="stage-msg"><button class="btn go" data-act="reveal" data-fk="reveal">Start episode ${it.n}</button></div></div>`;
+  const p0 = P()[it.id], idx = s ? s.eps.indexOf(it) : -1, n = s ? s.eps[idx + 1] : null, finished = p0 && p0.done;
+  const nextBox = n ? `<div class="next"><span>${finished ? "Finished. " : "Up next: "}<b>${esc(titleOf(n))}</b></span>${link("watch-" + n.id, "btn go", "Next episode")}</div>` : "";
+  const out = isLive ? `https://www.twitch.tv/${encodeURIComponent(it.twitch)}` : `https://www.youtube.com/watch?v=${encodeURIComponent(it.youtubeId)}`;
+  const side = s ? `<div class="side-h">Episodes</div>${epList(s, it.id)}` :
+    `<div class="side-h">More from ${esc(c.name)}</div><div class="stack">${VIDEOS.filter(v => v.creator === it.creator && v.id !== it.id && visible(v)).slice(0, 4).map(videoCard).join("") || `<div class="empty">No other videos yet.</div>`}</div>`;
+  return `<div class="watch"><div>${back}<div style="height:10px"></div>${stage}
+      <h1 class="w-title">${esc(titleOf(it))}</h1>
+      <p class="w-meta">${link("creator-" + c.id, "", esc(c.name))} · ${esc(it.gameName || GAMES[it.game].name)}${s ? ` · ${esc(s.title)}, episode ${it.n}` : ""}${isLive ? ` · ${num(it.viewers)} watching at last update` : it.views ? ` · ${num(it.views)} views` : ""}</p>
+      <div class="actions">${!isLive && !finished ? `<button class="btn" data-act="done" data-fk="done">Mark as watched</button>` : ""}<a class="btn" href="${out}" target="_blank" rel="noopener">Open on ${isLive ? "Twitch" : "YouTube"}</a></div>${nextBox}</div>
+    <aside>${side}</aside></div>`;
+}
+
+/* ---------- Render + routing ---------- */
+const NAV = [["home", "Home"], ["live", "Live"], ["series", "Series"], ["browse", "Browse"], ["pick", "Quick Pick"]];
+function active() { if (route.startsWith("show-") || route.startsWith("watch-")) return "series"; return route; }
+function renderChrome() {
+  const a = route.startsWith("watch-") || route.startsWith("show-") || route.startsWith("creator-") ? lastList : active();
+  const links = NAV.map(([k, t]) => `<a href="#${k}" data-go="${k}" class="${k === a ? "on" : ""}">${t}</a>`).join("");
+  document.getElementById("top").innerHTML = `<a class="logo" href="#home" data-go="home">Stream<b>Fans</b></a><nav class="nav" aria-label="Main">${links}</nav><div class="hsearch"><input class="search" id="hq" data-fk="hq" type="search" aria-label="Search StreamFans" placeholder="Search creators, series and videos" value="${esc(F.browse.q)}" autocomplete="off"></div>
+    <button class="shield" data-act="shield" data-fk="top-shield" aria-pressed="${S.shield}"><i></i><span class="sl">Spoiler&nbsp;</span>Shield ${S.shield ? "on" : "off"}</button>`;
+  renderRail(a);
+  document.getElementById("tabbar").innerHTML = NAV.map(([k, t]) => `<a href="#${k}" data-go="${k}" class="${k === a ? "on" : ""}">${k === "pick" ? "Pick" : t}</a>`).join("");
+  document.getElementById("foot").innerHTML = `<span>StreamFans is an independent project and is not affiliated with Rockstar Games, Take-Two, YouTube or Twitch. Videos and live status come from public channels${UPDATED ? `, updated ${new Date(UPDATED).toLocaleString([], { dateStyle: "medium", timeStyle: "short" })}` : ""}.</span><a href="#about" data-go="about">About StreamFans</a><button data-act="clear" data-fk="clear">${clearing ? "Tap again to clear my progress" : "Clear my progress"}</button>`;
+}
+function renderRail(a) {
+  const channels = LIVE.filter(visible).sort((x, y) => x.viewers - y.viewers).slice(0, 8);
+  const nav = NAV.map(([k, t]) => link(k, `rail-link${k === a ? " on" : ""}`, t)).join("");
+  const list = channels.map(l => { const c = CREATORS[l.creator]; return link("watch-" + l.id, "rail-ch", `<span class="avatar">${esc(c.name[0])}</span><span class="rc-t"><b>${esc(c.name)}</b><small>${esc(GAMES[l.game].name)}</small></span><span class="rc-v">${num(l.viewers)}</span>`); }).join("");
+  document.getElementById("rail").innerHTML = `<nav aria-label="Sections">${nav}</nav><div class="rail-h">Live channels</div>${list}${link("live", "rail-more", "See all live channels")}${link("about", "rail-more", "About StreamFans")}`;
+}
+function render() {
+  const fk = document.activeElement && document.activeElement.dataset ? document.activeElement.dataset.fk : null;
+  const app = document.getElementById("app");
+  let html;
+  if (route.startsWith("watch-")) html = watchView(route.slice(6));
+  else if (route.startsWith("show-")) html = showView(route.slice(5));
+  else if (route.startsWith("creator-")) html = creatorView(route.slice(8));
+  else html = (views[route] || views.home)();
+  app.innerHTML = html;
+  renderChrome();
+  if (fk) { const el = document.querySelector(`[data-fk="${CSS.escape(fk)}"]`); if (el) { el.focus(); if (el.type === "search") el.setSelectionRange(el.value.length, el.value.length); } }
+  mountPlayer();
+}
+function stopPlayer() { if (Player.timer) clearInterval(Player.timer); if (Player.yt && Player.yt.destroy) { try { Player.yt.destroy(); } catch (e) {} } Player.timer = null; Player.id = null; Player.yt = null; Player.token = null; }
+function setRoute(name) {
+  stopPlayer(); clearing = false;
+  route = name || "home";
+  if (views[route]) lastList = route;
+  render();
+  window.scrollTo(0, 0);
+}
+function go(name) {
+  setRoute(name);
+  try { if (location.hash.slice(1) !== name) location.hash = name; } catch (e) {}
+}
+window.addEventListener("hashchange", () => { const h = location.hash.slice(1) || "home"; if (h !== route) setRoute(h); });
+
+let ytLoad = null;
+function loadYT() {
+  if (ytLoad) return ytLoad;
+  ytLoad = new Promise(res => {
+    window.onYouTubeIframeAPIReady = () => res(window.YT);
+    const tag = document.createElement("script");
+    tag.src = "https://www.youtube.com/iframe_api";
+    tag.onerror = () => res(null);
+    document.head.append(tag);
+  });
+  return ytLoad;
+}
+function savePlayer(it) {
+  const y = Player.yt;
+  if (!y || !y.getCurrentTime) return;
+  const t = y.getCurrentTime(), dur = y.getDuration();
+  if (t > 0) setP(it.id, t, false, dur);
+}
+function mountPlayer() {
+  if (!route.startsWith("watch-")) return;
+  const it = ITEMS[route.slice(6)], el = document.getElementById("yt");
+  if (!it || !el) return;
+  stopPlayer();
+  const p = P()[it.id], start = p && !p.done ? Math.floor(p.t) : 0, token = {};
+  Player.token = token; Player.id = it.id;
+  loadYT().then(YT => {
+    if (Player.token !== token || !document.getElementById("yt")) return;
+    if (!YT) {
+      document.getElementById("yt").outerHTML = `<iframe src="https://www.youtube-nocookie.com/embed/${encodeURIComponent(it.youtubeId)}?start=${start}&rel=0" title="${esc(titleOf(it))}" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe>`;
+      return;
+    }
+    Player.yt = new YT.Player("yt", { videoId: it.youtubeId, host: "https://www.youtube-nocookie.com", width: "100%", height: "100%",
+      playerVars: { start, rel: 0, playsinline: 1, origin: location.origin },
+      events: { onStateChange: e => {
+        if (e.data === YT.PlayerState.ENDED) { const d = Player.yt.getDuration(); setP(it.id, d, true, d); render(); }
+        else if (e.data === YT.PlayerState.PAUSED) savePlayer(it);
+      } } });
+    Player.timer = setInterval(() => savePlayer(it), 5000);
+  });
+}
+document.addEventListener("click", e => {
+  const a = e.target.closest("[data-go]");
+  if (a) { e.preventDefault(); go(a.dataset.go); return; }
+  const c = e.target.closest("[data-set]");
+  if (c) {
+    const [g, k] = c.dataset.set.split(".");
+    F[g][k] = c.dataset.val;
+    if (g === "pick") F.pick.offset = 0;
+    render(); return;
+  }
+  const b = e.target.closest("[data-act]"); if (!b) return;
+  const act = b.dataset.act;
+  if (act === "shield") { S.shield = !S.shield; save(); F.pick.offset = 0; render(); }
+  else if (act === "another") { F.pick.offset++; render(); }
+  else if (act === "feature") { featureIndex = +b.dataset.i; render(); }
+  else if (act === "reveal") { setP(route.slice(6), 1, false); render(); }
+  else if (act === "done") { const it = ITEMS[route.slice(6)]; setP(it.id, 1, true); render(); }
+  else if (act === "clear") { if (clearing) { S.progress = {}; clearing = false; save(); stopPlayer(); render(); } else { clearing = true; renderChrome(); const el = document.querySelector('[data-fk="clear"]'); if (el) el.focus(); } }
+});
+document.addEventListener("input", e => {
+  if (e.target.id === "q" || e.target.id === "hq") {
+    F.browse.q = e.target.value;
+    if (route !== "browse") { if (e.target.value) go("browse"); return; }
+    const other = document.getElementById(e.target.id === "q" ? "hq" : "q");
+    if (other) other.value = e.target.value;
+    document.getElementById("results").innerHTML = browseResults();
+  }
+});
+
+let startRoute = "home";
+try { startRoute = location.hash.slice(1) || "home"; } catch (e) {}
+route = startRoute;
+if (views[route]) lastList = route;
+document.getElementById("app").innerHTML = `<div class="empty">Loading videos…</div>`;
+fetch("catalog.json", { cache: "no-store" })
+  .then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
+  .then(c => { hydrate(c); render(); })
+  .catch(() => { document.getElementById("app").innerHTML = `<div class="empty">Videos could not load right now. Refresh the page to try again.</div>`; });
+</script>
+</body>
+</html>
