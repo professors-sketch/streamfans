@@ -101,6 +101,7 @@ for (const c of channels.filter(c => c.twitch)) {
   try {
     const up = (await text(`https://decapi.me/twitch/uptime/${u}`)).trim();
     await wait(400);
+    console.log(`twitch ${c.twitch}: ${up.slice(0, 80)}`);
     if (/offline|not found|error|no user/i.test(up) || !/\d/.test(up)) continue;
     const [views, gameName, title] = [await text(`https://decapi.me/twitch/viewercount/${u}`), await text(`https://decapi.me/twitch/game/${u}`), await text(`https://decapi.me/twitch/title/${u}`)].map(s => s.trim());
     await wait(400);
